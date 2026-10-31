@@ -13,8 +13,10 @@ namespace Demo.Player
     public class PlayerCameraController : MonoBehaviour
     {
         [Header("视角手感")]
-        [SerializeField] private float xSensitivity = 0.12f;    // 水平:度/像素
-        [SerializeField] private float ySensitivity = 0.0018f;  // 垂直:FreeLook Y 轴(0~1)/像素
+        [Tooltip("水平灵敏度:度/像素(0.3 ≈ 常见第三人称手感,360° 约 1200 像素)")]
+        [SerializeField] private float xSensitivity = 0.3f;
+        [Tooltip("垂直灵敏度:FreeLook Y 轴(0~1)/像素。当前三环总俯仰约 51°,0.004 ≈ 0.2°/像素")]
+        [SerializeField] private float ySensitivity = 0.004f;
         [SerializeField] private float smoothTime = 0.06f;      // 输入平滑
 
         // 摇杆死区阈值(视角输入)
