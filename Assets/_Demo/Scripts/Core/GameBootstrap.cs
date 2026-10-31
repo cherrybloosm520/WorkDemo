@@ -79,10 +79,27 @@ namespace Demo.Core
                 var player = Object.Instantiate(prefab);
                 player.name = "Player";
                 player.transform.position = new Vector3(0f, 0.05f, 0f);
+                EnsurePlayerLayer(player);
                 return player;
             }
 
-            return BuildCapsulePlayer();
+            var capsule = BuildCapsulePlayer();
+            EnsurePlayerLayer(capsule);
+            return capsule;
+        }
+
+        /// <summary>
+        /// 玩家与子物体统一放到 Player 图层:着地检测等物理查询用掩码排除自身
+        /// (依赖 TagManager 中已定义的 Player 图层,由 PlayerRigBuilder 创建)。
+        /// </summary>
+        private static void EnsurePlayerLayer(GameObject player)
+        {
+            var playerLayer = LayerMask.NameToLayer("Player");
+            if (playerLayer < 0)
+                return;
+
+            foreach (var t in player.GetComponentsInChildren<Transform>(true))
+                t.gameObject.layer = playerLayer;
         }
 
         private static GameObject BuildCapsulePlayer()

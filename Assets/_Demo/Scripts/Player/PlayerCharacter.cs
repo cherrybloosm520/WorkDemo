@@ -25,10 +25,13 @@ namespace Demo.Player
         [SerializeField] private float gravity = -24f;
         [SerializeField] private float maxFallSpeed = -30f;
         // 着地检测参数:从脚上方 groundCheckOffset 处向下投射,扫到脚底以下。
-        // 起点必须足够高,使检测球不与地面"初始重叠"(PhysX 会跳过起点已重叠的碰撞体)。
         [SerializeField] private float groundCheckRadius = 0.2f;
         [SerializeField] private float groundCheckOffset = 0.5f;
         [SerializeField] private float groundCheckDistance = 0.75f;
+
+        [Header("滞空容错(土狼时间)")]
+        [Tooltip("离地后仍视为地面的宽限秒数:过滤单帧检测噪声,并允许走出平台边缘后短时间内仍可起跳")]
+        [SerializeField] private float coyoteTime = 0.12f;
 
         // 摇杆死区阈值(移动输入)
         private const float MoveDeadzone = 0.15f;
@@ -46,12 +49,22 @@ namespace Demo.Player
 
         public bool IsGrounded { get; private set; }
 
+        /// <summary>累计滞空时间(着地时清零)。</summary>
+        public float AirTime { get; private set; }
+
+        /// <summary>
+        /// 确认离地:着地检测为假且滞空超过土狼时间。
+        /// 地面→空中的转移以此为准,单帧检测噪声不会翻转状态机。
+        /// </summary>
+        public bool CanLeaveGround => !IsGrounded && AirTime > coyoteTime;
+
         // 速度/手感参数只读暴露给状态
         public float WalkSpeed => walkSpeed;
         public float SprintSpeed => sprintSpeed;
         public float Acceleration => acceleration;
         public float Deceleration => deceleration;
         public float AirDeceleration => airDeceleration;
+        public float CoyoteTime => coyoteTime;
         public float AirControlFactor => airControlFactor;
         public float TurnSpeed => turnSpeed;
         public float JumpSpeed => jumpSpeed;
@@ -75,26 +88,29 @@ namespace Demo.Player
         private void Update()
         {
             UpdateGrounded();
+
+            // 滞空计时:作为地面→空中转移的缓冲(土狼时间)
+            AirTime = IsGrounded ? 0f : AirTime + Time.deltaTime;
+
             BufferInputs();
             InputBuffer.Tick();
             StateMachine.Tick(Time.deltaTime);
         }
 
         /// <summary>
-        /// 着地检测:从脚上方高处向下 SphereCast,只认法线朝上的表面。
-        /// 要点:
-        /// 1. 起点抬高到脚上 0.5,检测球不与地面初始重叠(PhysX 会跳过起点已重叠的碰撞体,
-        ///    这是第一版"永远误判空中"的原因)。
-        /// 2. 过滤 hit.normal.y &lt; 0.5 的表面——竖直墙面(如地面边缘的侧壁)不会被误认为地面。
-        ///    否则角色跑出地面边缘沿侧壁坠落时,球会间歇蹭到侧壁,着地状态每帧翻转,
-        ///    动画层跟着乱播落地动画。
-        /// 3. 起点处的球必然与自身 CC 初始重叠,PhysX 自动跳过自身,只命中下方地面。
+        /// 着地检测(业界标准做法):
+        /// 1. 玩家放在独立 Player 图层,查询掩码 ~(1&lt;&lt;layer) 直接排除自身——不依赖
+        ///    "初始重叠被跳过"等不可靠的 PhysX 行为,也不做几何自过滤。
+        /// 2. 从脚上方高处向下 SphereCast,起点不与地面初始重叠。
+        /// 3. 只认法线朝上的表面(normal.y &gt; 0.5):竖直墙面(如地面边缘的侧壁)不算地面。
+        /// 检测结果单帧可能受噪声影响,状态机层面由土狼时间兜底。
         /// </summary>
         private void UpdateGrounded()
         {
             var origin = transform.position + Vector3.up * groundCheckOffset;
+            var selfMask = ~(1 << gameObject.layer);
             var hitGround = Physics.SphereCast(origin, groundCheckRadius, Vector3.down, out var hit,
-                                groundCheckDistance, ~0, QueryTriggerInteraction.Ignore)
+                                groundCheckDistance, selfMask, QueryTriggerInteraction.Ignore)
                             && hit.normal.y > 0.5f;
 
             if (hitGround != IsGrounded)

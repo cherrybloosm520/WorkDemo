@@ -30,6 +30,7 @@ namespace Demo.Editor
         /// <summary>命令行一键入口(菜单 1→2→3 的串联),供 batchmode 执行。</summary>
         public static void SetupAll()
         {
+            EnsurePlayerLayer();
             ConfigureMixamoImports();
             BuildLocomotionController();
             BuildPlayerPrefab();
@@ -145,6 +146,8 @@ namespace Demo.Editor
                 throw new FileNotFoundException("角色 FBX 没有 Avatar,请先执行菜单第 1 步(人形骨骼配置)");
 
             // 结构:Player 根(控制组件)→ Model 子物体(模型与 Animator)→ LookTarget 子物体
+            EnsurePlayerLayer();
+
             var root = new GameObject("Player");
             var model = (GameObject)PrefabUtility.InstantiatePrefab(characterAsset);
             model.name = "Model";
@@ -173,6 +176,14 @@ namespace Demo.Editor
             lookTarget.transform.SetParent(root.transform, false);
             lookTarget.transform.localPosition = new Vector3(0f, 1.5f, 0f);
 
+            // 整个玩家层级放到 Player 图层:着地检测等物理查询用掩码排除自身
+            var playerLayer = LayerMask.NameToLayer("Player");
+            if (playerLayer >= 0)
+            {
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                    t.gameObject.layer = playerLayer;
+            }
+
             EnsureDirectory("Assets/_Demo/Resources");
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             Object.DestroyImmediate(root);
@@ -182,6 +193,37 @@ namespace Demo.Editor
         }
 
         // ---------- 内部工具 ----------
+
+        /// <summary>
+        /// 确保 TagManager 中定义了 Player 图层(物理查询用掩码排除自身的前提)。
+        /// 优先复用同名图层,否则占用第一个空闲的用户图层槽位(8~31)。
+        /// </summary>
+        private static void EnsurePlayerLayer()
+        {
+            var tagManager = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0];
+            var serialized = new SerializedObject(tagManager);
+            var layers = serialized.FindProperty("layers");
+
+            for (var i = 0; i < layers.arraySize; i++)
+            {
+                if (layers.GetArrayElementAtIndex(i).stringValue == "Player")
+                    return; // 已存在
+            }
+
+            for (var i = 8; i < layers.arraySize; i++)
+            {
+                var slot = layers.GetArrayElementAtIndex(i);
+                if (string.IsNullOrEmpty(slot.stringValue))
+                {
+                    slot.stringValue = "Player";
+                    serialized.ApplyModifiedProperties();
+                    Debug.Log($"[PlayerRigBuilder] 已在 TagManager 添加 Player 图层(槽位 {i})。");
+                    return;
+                }
+            }
+
+            Debug.LogWarning("[PlayerRigBuilder] TagManager 用户图层已满,无法添加 Player 图层。");
+        }
 
         /// <summary>
         /// 按剪辑名关键字收集 6 个移动动画。

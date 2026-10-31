@@ -49,10 +49,12 @@ namespace Demo.Player
                 return;
             }
 
-            // 走出平台边缘 → 进入空中
-            if (!_owner.IsGrounded)
+            // 走出平台边缘 → 进入空中(土狼时间兜底:单帧检测噪声不会翻转状态;
+            // 走出边缘后 coyoteTime 秒内仍可起跳,也是行业标配手感)
+            if (_owner.CanLeaveGround)
             {
-                _owner.StateMachine.ChangeState<PlayerAirState>("离地:着地检测为假(失去支撑/失足)");
+                _owner.StateMachine.ChangeState<PlayerAirState>(
+                    $"离地:着地检测为假,且滞空 {_owner.AirTime:F2}s 超过土狼时间 {_owner.CoyoteTime:F2}s,确认失去支撑");
                 return;
             }
 
