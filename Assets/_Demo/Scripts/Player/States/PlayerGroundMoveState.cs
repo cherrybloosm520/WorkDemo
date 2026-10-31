@@ -43,6 +43,7 @@ namespace Demo.Player
             // 跳跃(经输入缓冲消费,缓冲窗口内按下的跳跃在地面时立即起跳)
             if (_owner.InputBuffer.Consume(PlayerActionKey.Jump))
             {
+                DemoLog.Log("消费跳跃缓冲,起跳");
                 _owner.VerticalVelocity = _owner.JumpSpeed;
                 _owner.StateMachine.ChangeState<PlayerAirState>();
                 return;

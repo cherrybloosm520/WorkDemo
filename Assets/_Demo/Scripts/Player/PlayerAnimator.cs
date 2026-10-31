@@ -14,6 +14,7 @@ namespace Demo.Player
         private Animator _animator;
         private PlayerCharacter _character;
         private bool _jumpConsumed;
+        private string _lastClipName = string.Empty;
 
         private static readonly int SpeedId = Animator.StringToHash("Speed");
         private static readonly int GroundedId = Animator.StringToHash("Grounded");
@@ -40,6 +41,11 @@ namespace Demo.Player
                 _animator = gameObject.AddComponent<Animator>();
 
             _character = GetComponent<PlayerCharacter>();
+
+            var controllerName = _animator.runtimeAnimatorController != null
+                ? _animator.runtimeAnimatorController.name
+                : "(无控制器)";
+            DemoLog.Log($"PlayerAnimator 绑定到:{_animator.gameObject.name},控制器:{controllerName}");
         }
 
         private void Update()
@@ -56,12 +62,23 @@ namespace Demo.Player
             // 起跳上升段触发一次跳跃动画;落地后复位锁存
             if (!_character.IsGrounded && _character.VerticalVelocity > 0.1f && !_jumpConsumed)
             {
+                DemoLog.Log("触发跳跃动画触发器");
                 _animator.SetTrigger(JumpId);
                 _jumpConsumed = true;
             }
             else if (_character.IsGrounded)
             {
                 _jumpConsumed = false;
+            }
+
+            // 当前播放剪辑变化时输出日志(带关键参数,便于排查"播错动作")
+            var clipInfo = _animator.GetCurrentAnimatorClipInfo(0);
+            var clipName = clipInfo.Length > 0 ? clipInfo[0].clip.name : "(无剪辑)";
+            if (clipName != _lastClipName)
+            {
+                DemoLog.Log(
+                    $"动画剪辑:{_lastClipName} -> {clipName} (Speed={planarSpeed:F2}, Grounded={_character.IsGrounded}, VV={_character.VerticalVelocity:F2})");
+                _lastClipName = clipName;
             }
         }
     }

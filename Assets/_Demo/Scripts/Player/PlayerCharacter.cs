@@ -84,7 +84,12 @@ namespace Demo.Player
         {
             var halfHeight = CharacterController.height * 0.5f;
             var origin = transform.position + Vector3.up * 0.1f;
-            IsGrounded = Physics.SphereCast(origin, groundCheckRadius, Vector3.down, out _, halfHeight - 0.1f + 0.05f);
+            var grounded = Physics.SphereCast(origin, groundCheckRadius, Vector3.down, out _, halfHeight - 0.1f + 0.05f);
+
+            if (grounded != IsGrounded)
+                DemoLog.Log($"着地状态:{IsGrounded} -> {grounded}");
+
+            IsGrounded = grounded;
         }
 
         /// <summary>
@@ -100,7 +105,10 @@ namespace Demo.Player
         private void BufferInputs()
         {
             if (PlayerInput.Jump.WasPressedThisFrame())
+            {
                 InputBuffer.Buffer(PlayerActionKey.Jump);
+                DemoLog.Log("输入缓冲:跳跃");
+            }
         }
 
         /// <summary>朝目标方向平滑旋转(移动与空闲状态共用)。</summary>

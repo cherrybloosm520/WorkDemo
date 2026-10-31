@@ -36,6 +36,7 @@ namespace Demo.Core
         public void ChangeState<TState>() where TState : IState
         {
             var target = typeof(TState);
+            var previous = _current?.GetType();
             if (_current != null && _current.GetType() == target)
                 return;
 
@@ -44,6 +45,7 @@ namespace Demo.Core
 
             _current?.Exit();
             _current = next;
+            DemoLog.Log($"状态机:{previous?.Name} -> {target.Name}");
             _current.Enter();
         }
 
@@ -53,6 +55,7 @@ namespace Demo.Core
             if (_current == null)
                 return;
 
+            DemoLog.Log($"状态机:重进 {_current.GetType().Name}");
             _current.Exit();
             _current.Enter();
         }
