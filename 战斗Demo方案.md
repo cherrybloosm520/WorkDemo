@@ -186,8 +186,9 @@ Assets/
 - [x] 用 Unity Hub 新建项目到本目录
 - [x] `git init` + Unity .gitignore(初始提交待 git 身份配置后完成)
 - [x] 配置包:URP、Cinemachine、Input System、ProBuilder(重启编辑器后自动下载)
-- [ ] 编辑器内:创建 URP 资产并挂到 Graphics / Quality 设置
-- [ ] 编辑器内:Package Manager > My Assets 导入 Starter Assets - Third Person
+- [x] 创建 URP 资产并挂到 Graphics / Quality 设置(命令行脚本自动完成)
+- [x] Input System 已启用(新旧共存)、TMP Essentials 已导入
+- [ ] 编辑器内:Package Manager > My Assets 导入 Starter Assets - Third Person(需要你的 Unity 账号登录)
 - [ ] Mixamo 下载首批动画(跑/走/疾跑/轻击),完成重定向验证
 - [ ] 搭一个测试场景:角色跑跳 + 键鼠/手柄输入正常 → 验收通过
 
