@@ -1,0 +1,43 @@
+# === Unity 生成目录(不进版本控制)===
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Plastic SCM 本地元数据(与 git 重复,不提交)
+.plastic/
+ignore.conf
+
+# 下载的 unitypackage 包文件
+*.unitypackage
+
+# === IDE / 工具 ===
+.idea/
+.vs/
+.vscode/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# === 系统文件 ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# === Unity 崩溃/错误报告 ===
+crashlytics-build.properties
+sysinfo.txt
