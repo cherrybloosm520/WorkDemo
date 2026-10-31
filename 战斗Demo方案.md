@@ -149,8 +149,11 @@ Assets/
 | 特效 | Unity 免费粒子包 / URP 自带 | 刀光、残影、命中火花 |
 | 场景 | 灰盒 + 免费环境包 | 暗色武侠风:冷色调、体积雾、Bloom |
 
-**Mixamo 动画下载清单**(首批):
-跑步、疾跑、站立待机、轻击 ×4、重击 ×2、格挡、受击 ×4(前/后/左/右)、死亡、闪避/翻滚、跳。注意下载时选"Generic + In Place"方便程序控制位移。
+**Mixamo 动画下载清单**(全部选 FBX、30fps、勾选 **In Place**;动画选 **Without Skin**):
+- 移动组(立即下载,放入 `Assets/_Demo/Art/Animations/`):**Idle、Walking、Running、Jumping、Falling Idle、Landing**
+- 角色模型(T-Pose、With Skin,放入 `Assets/_Demo/Art/Character/`):任意角色,如 **X Bot**
+- 战斗组(第 4~5 周前下载):轻击 ×4、重击 ×2、格挡、闪避/翻滚、受击 ×4(前/后/左/右)、死亡
+- 下载后执行 Unity 菜单 **Demo/角色搭建** 的 1→2→3,自动生成人形配置、移动动画控制器与玩家预制体
 
 ---
 
