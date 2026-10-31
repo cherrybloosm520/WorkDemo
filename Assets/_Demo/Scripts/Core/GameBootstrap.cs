@@ -1,0 +1,84 @@
+using Demo.Player;
+using UnityEngine;
+using Object = UnityEngine.Object;
+
+namespace Demo.Core
+{
+    /// <summary>
+    /// 开发期引导:任意场景 Play 时,若场景中还没有玩家角色,自动搭建最小可玩环境
+    /// (地面 + 胶囊玩家 + 轨道相机 + 光照)。用于在没有正式场景的阶段快速迭代移动手感。
+    /// 正式训练场场景搭建完成后,场景内已摆放角色,此引导自动跳过。
+    /// </summary>
+    public static class GameBootstrap
+    {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void EnsureDevRig()
+        {
+            if (Object.FindFirstObjectByType<PlayerCharacter>() != null)
+                return;
+
+            BuildDevRig();
+        }
+
+        private static void BuildDevRig()
+        {
+            // 地面
+            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            ground.name = "Ground (Dev)";
+            var groundMat = CreateLitMaterial(new Color(0.16f, 0.17f, 0.19f));
+            ground.GetComponent<Renderer>().sharedMaterial = groundMat;
+
+            // 玩家(CharacterController + 胶囊视觉,后续替换为 Mixamo 模型)
+            var player = new GameObject("Player (Dev)");
+            player.transform.position = new Vector3(0f, 0.05f, 0f);
+            var controller = player.AddComponent<CharacterController>();
+            controller.height = 1.8f;
+            controller.radius = 0.35f;
+            controller.center = new Vector3(0f, 0.9f, 0f);
+            player.AddComponent<PlayerCharacter>();
+
+            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            body.name = "Body (Dev)";
+            Object.Destroy(body.GetComponent<CapsuleCollider>());
+            body.transform.SetParent(player.transform, false);
+            body.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            body.transform.localScale = new Vector3(1f, 0.9f, 1f);
+            body.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.32f, 0.36f, 0.44f));
+
+            var lookTarget = new GameObject("LookTarget");
+            lookTarget.transform.SetParent(player.transform, false);
+            lookTarget.transform.localPosition = new Vector3(0f, 1.5f, 0f);
+
+            // 主相机(场景已有则复用)
+            var cam = Camera.main;
+            if (cam == null)
+            {
+                var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
+                cam = camGo.AddComponent<Camera>();
+                camGo.AddComponent<AudioListener>();
+            }
+            if (cam.GetComponent<Cinemachine.CinemachineBrain>() == null)
+                cam.gameObject.AddComponent<Cinemachine.CinemachineBrain>();
+
+            // 轨道相机控制器
+            var cameraRig = new GameObject("PlayerCameraRig");
+            var cameraController = cameraRig.AddComponent<PlayerCameraController>();
+            cameraController.Bind(player.transform, lookTarget.transform);
+
+            // 光照(场景已有则复用)
+            if (Object.FindFirstObjectByType<Light>() == null)
+            {
+                var sun = new GameObject("Sun");
+                var light = sun.AddComponent<Light>();
+                light.type = LightType.Directional;
+                light.intensity = 1.2f;
+                sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            }
+        }
+
+        private static Material CreateLitMaterial(Color color)
+        {
+            return new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = color };
+        }
+    }
+}

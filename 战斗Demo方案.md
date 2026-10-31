@@ -141,7 +141,7 @@ Assets/
 
 | 用途 | 来源 | 说明 |
 |---|---|---|
-| 角色控制器基础 | Unity Starter Assets - Third Person | 移动、基础动画、Input System 集成 |
+| 角色控制器与镜头 | 自研代码(CharacterController + 状态机 + CinemachineFreeLook) | 移动/跳跃/轨道相机已完成,全部可控可讲 |
 | 角色模型 | Mixamo | 下载 1~2 个风格合适的角色 |
 | 角色动画 | Mixamo | 见下方清单 |
 | 武器模型 | Sketchfab(CC0)/ Asset Store 免费包 | 两把刀 + 一把重刀 |
@@ -188,7 +188,7 @@ Assets/
 - [x] 配置包:URP、Cinemachine、Input System、ProBuilder(重启编辑器后自动下载)
 - [x] 创建 URP 资产并挂到 Graphics / Quality 设置(命令行脚本自动完成)
 - [x] Input System 已启用(新旧共存)、TMP Essentials 已导入
-- [ ] 编辑器内:Package Manager > My Assets 导入 Starter Assets - Third Person(需要你的 Unity 账号登录)
+- [x] 角色控制器改为自研:CharacterController + 状态机 + CinemachineFreeLook 镜头,不依赖资产商店(中国版 Hub 找不到 Starter Assets,自研反而更有面试含金量)
 - [ ] Mixamo 下载首批动画(跑/走/疾跑/轻击),完成重定向验证
 - [ ] 搭一个测试场景:角色跑跳 + 键鼠/手柄输入正常 → 验收通过
 
