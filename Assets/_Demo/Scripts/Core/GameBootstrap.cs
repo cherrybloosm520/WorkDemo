@@ -23,9 +23,14 @@ namespace Demo.Core
 
         private static void BuildDevRig()
         {
-            // 地面
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            // 地面:用厚方块而不是薄平面。
+            // CharacterController 站在零厚度的 Plane 上时,会被向下的贴地力反复
+            // 推穿再弹回(着地检测两帧一抖,状态机与动画跟着乱跳——"跳一下全乱"的根因)。
+            // 厚实心方块给 CC 稳定支撑,顶面在 y=0。
+            var ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
             ground.name = "Ground (Dev)";
+            ground.transform.position = new Vector3(0f, -1f, 0f);
+            ground.transform.localScale = new Vector3(20f, 2f, 20f);
             ground.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.16f, 0.17f, 0.19f));
 
             // 玩家(预制体优先,胶囊回退)
