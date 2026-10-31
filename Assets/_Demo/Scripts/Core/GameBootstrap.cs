@@ -6,9 +6,8 @@ namespace Demo.Core
 {
     /// <summary>
     /// 开发期引导:任意场景 Play 时,若场景中还没有玩家角色,自动搭建最小可玩环境
-    /// (地面 + 玩家 + 轨道相机 + 光照)。
-    /// 玩家优先使用 Resources/Player 预制体(Mixamo 角色,由菜单 Demo/角色搭建 生成);
-    /// 预制体不存在时回退为开发用胶囊。正式训练场场景搭建完成后,场景内已摆放角色,此引导自动跳过。
+    /// (地面 + 胶囊玩家 + 轨道相机 + 光照)。
+    /// 动画阶段重做后,这里改回"角色预制体优先、胶囊回退"。
     /// </summary>
     public static class GameBootstrap
     {
@@ -70,19 +69,12 @@ namespace Demo.Core
             }
         }
 
-        /// <summary>优先实例化 Mixamo 角色预制体;不存在则回退到开发胶囊。</summary>
+        /// <summary>
+        /// 生成开发用胶囊玩家。
+        /// 动画阶段重做后(用户提供动作库),此处改为:优先实例化角色预制体,胶囊回退。
+        /// </summary>
         private static GameObject SpawnPlayer()
         {
-            var prefab = Resources.Load<GameObject>("Player");
-            if (prefab != null)
-            {
-                var player = Object.Instantiate(prefab);
-                player.name = "Player";
-                player.transform.position = new Vector3(0f, 0.05f, 0f);
-                EnsurePlayerLayer(player);
-                return player;
-            }
-
             var capsule = BuildCapsulePlayer();
             EnsurePlayerLayer(capsule);
             return capsule;

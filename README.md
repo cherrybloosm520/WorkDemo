@@ -9,7 +9,11 @@
 
 ## 资源来源
 
-- **角色与动画**:Mixamo(Adobe)资产——KYLE 角色与动画 FBX 取自公开仓库 [Kmberry1989/double-agent](https://github.com/Kmberry1989/double-agent)。Mixamo 资产可免费用于游戏项目(不可作为独立素材转售)。
-- **引擎与插件**:Unity 2022.3 LTS、URP、Cinemachine、Input System(均为 Unity 官方包)。
+- **引擎与插件**:Unity 2022.3 LTS、URP、Cinemachine、Input System(均为 Unity 官方包)
+- **角色与动画**:待接入(用户自选动作库)
+
+## 开发进度
+
+详见 [开发进度.md](开发进度.md)。
 
 作者很帅
