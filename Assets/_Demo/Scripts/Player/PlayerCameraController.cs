@@ -16,13 +16,18 @@ namespace Demo.Player
         [SerializeField] private float ySensitivity = 0.0018f;  // 垂直:FreeLook Y 轴(0~1)/像素
         [SerializeField] private float smoothTime = 0.06f;      // 输入平滑
 
-        [Header("垂直视角范围(三环轨道:高度, 半径)")]
-        [Tooltip("顶环:高度越大俯视角度越大")]
-        [SerializeField] private Vector2 topOrbit = new(2.2f, 2.8f);
-        [Tooltip("中环:默认肩后视角")]
-        [SerializeField] private Vector2 middleOrbit = new(0.6f, 3.6f);
-        [Tooltip("底环:高度为负 = 仰视;太低镜头会低于地面")]
-        [SerializeField] private Vector2 bottomOrbit = new(-0.9f, 3.8f);
+        [Header("垂直视角范围(角度制,单位:度)")]
+        [Tooltip("顶环俯视角度:正数 = 俯视,数值越大越接近垂直向下。不要接近 ±90°")]
+        [SerializeField] private float topPitch = 38f;
+        [Tooltip("中环默认视角俯角")]
+        [SerializeField] private float middlePitch = 10f;
+        [Tooltip("底环角度:负数 = 仰视。太负镜头会低于地面(约 -15° 是地面极限)")]
+        [SerializeField] private float bottomPitch = -13f;
+
+        [Header("三环轨道半径(单位:米)")]
+        [SerializeField] private float topRadius = 2.8f;
+        [SerializeField] private float middleRadius = 3.6f;
+        [SerializeField] private float bottomRadius = 3.8f;
 
         private CinemachineFreeLook _freeLook;
         private Vector2 _smoothedDelta;
@@ -47,6 +52,17 @@ namespace Demo.Player
             gameObject.AddComponent<CinemachineCollider>();
         }
 
+        /// <summary>
+        /// 把"俯仰角 + 半径"换算成 FreeLook 的轨道参数。
+        /// 角度定义:正数 = 相机在目标上方俯视,负数 = 仰视。
+        /// 换算关系:height = tan(角度) × radius(高度相对 LookAt 目标)。
+        /// </summary>
+        private static CinemachineFreeLook.Orbit OrbitFromPitch(float pitchDegrees, float radius)
+        {
+            var height = Mathf.Tan(pitchDegrees * Mathf.Deg2Rad) * radius;
+            return new CinemachineFreeLook.Orbit(height, radius);
+        }
+
         /// <summary>绑定跟随目标与注视点(玩家与玩家头顶的 LookTarget)。</summary>
         public void Bind(Transform follow, Transform lookAt)
         {
@@ -59,10 +75,11 @@ namespace Demo.Player
             if (_freeLook.Follow == null)
                 return;
 
-            // 每帧应用轨道参数:Play 模式下改 Inspector 数值可实时看效果(3 次结构体赋值,开销可忽略)
-            _freeLook.m_Orbits[0] = new CinemachineFreeLook.Orbit(topOrbit.x, topOrbit.y);
-            _freeLook.m_Orbits[1] = new CinemachineFreeLook.Orbit(middleOrbit.x, middleOrbit.y);
-            _freeLook.m_Orbits[2] = new CinemachineFreeLook.Orbit(bottomOrbit.x, bottomOrbit.y);
+            // 每帧由"俯仰角 + 半径"换算轨道高度并应用:
+            // Play 模式下改 Inspector 的角度/半径可实时看效果(3 次换算,开销可忽略)
+            _freeLook.m_Orbits[0] = OrbitFromPitch(topPitch, topRadius);
+            _freeLook.m_Orbits[1] = OrbitFromPitch(middlePitch, middleRadius);
+            _freeLook.m_Orbits[2] = OrbitFromPitch(bottomPitch, bottomRadius);
 
             var look = PlayerInput.Look.ReadValue<Vector2>();
 
