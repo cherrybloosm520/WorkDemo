@@ -24,8 +24,12 @@ namespace Demo.Player
         [SerializeField] private float jumpSpeed = 7.5f;
         [SerializeField] private float gravity = -24f;
         [SerializeField] private float maxFallSpeed = -30f;
-        [SerializeField] private float groundCheckRadius = 0.18f;
-        [SerializeField] private float groundCheckOffset = 0.1f;
+        // 注意:CC 静止时底面悬在离地面 skinWidth(默认 0.08)处,
+        // 检测球底 = 0.08 + offset - radius 必须明显小于 0(留出浮点余量),
+        // 否则球底恰好压在地面边界上,OverlapSphere 每帧在命中/未命中间抖动。
+        // 0.08 + 0.15 - 0.3 = -0.07,即站立时有 7 厘米的稳定重叠。
+        [SerializeField] private float groundCheckRadius = 0.3f;
+        [SerializeField] private float groundCheckOffset = 0.15f;
 
         // 摇杆死区阈值(移动输入)
         private const float MoveDeadzone = 0.15f;
