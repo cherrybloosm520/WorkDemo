@@ -16,6 +16,14 @@ namespace Demo.Player
         [SerializeField] private float ySensitivity = 0.0018f;  // 垂直:FreeLook Y 轴(0~1)/像素
         [SerializeField] private float smoothTime = 0.06f;      // 输入平滑
 
+        [Header("垂直视角范围(三环轨道:高度, 半径)")]
+        [Tooltip("顶环:高度越大俯视角度越大")]
+        [SerializeField] private Vector2 topOrbit = new(2.2f, 2.8f);
+        [Tooltip("中环:默认肩后视角")]
+        [SerializeField] private Vector2 middleOrbit = new(0.6f, 3.6f);
+        [Tooltip("底环:高度为负 = 仰视;太低镜头会低于地面")]
+        [SerializeField] private Vector2 bottomOrbit = new(-0.9f, 3.8f);
+
         private CinemachineFreeLook _freeLook;
         private Vector2 _smoothedDelta;
         private Vector2 _deltaVelocity;
@@ -23,11 +31,6 @@ namespace Demo.Player
         private void Awake()
         {
             _freeLook = gameObject.AddComponent<CinemachineFreeLook>();
-
-            // 三环轨道:上/中/下三个角度环,轨道半径 3~4.5 米
-            _freeLook.m_Orbits[0] = new CinemachineFreeLook.Orbit(0.4f, 4.6f);
-            _freeLook.m_Orbits[1] = new CinemachineFreeLook.Orbit(0.5f, 3.4f);
-            _freeLook.m_Orbits[2] = new CinemachineFreeLook.Orbit(0.35f, 4.0f);
 
             _freeLook.m_Lens.FieldOfView = 50f;
 
@@ -55,6 +58,11 @@ namespace Demo.Player
         {
             if (_freeLook.Follow == null)
                 return;
+
+            // 每帧应用轨道参数:Play 模式下改 Inspector 数值可实时看效果(3 次结构体赋值,开销可忽略)
+            _freeLook.m_Orbits[0] = new CinemachineFreeLook.Orbit(topOrbit.x, topOrbit.y);
+            _freeLook.m_Orbits[1] = new CinemachineFreeLook.Orbit(middleOrbit.x, middleOrbit.y);
+            _freeLook.m_Orbits[2] = new CinemachineFreeLook.Orbit(bottomOrbit.x, bottomOrbit.y);
 
             var look = PlayerInput.Look.ReadValue<Vector2>();
 
