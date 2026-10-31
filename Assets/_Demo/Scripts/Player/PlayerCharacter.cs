@@ -24,17 +24,14 @@ namespace Demo.Player
         [SerializeField] private float jumpSpeed = 7.5f;
         [SerializeField] private float gravity = -24f;
         [SerializeField] private float maxFallSpeed = -30f;
-        // 注意:CC 静止时底面悬在离地面 skinWidth(默认 0.08)处,
-        // 检测球底 = 0.08 + offset - radius 必须明显小于 0(留出浮点余量),
-        // 否则球底恰好压在地面边界上,OverlapSphere 每帧在命中/未命中间抖动。
-        // 0.08 + 0.15 - 0.3 = -0.07,即站立时有 7 厘米的稳定重叠。
-        [SerializeField] private float groundCheckRadius = 0.3f;
-        [SerializeField] private float groundCheckOffset = 0.15f;
+        // 着地检测参数:从脚上方 groundCheckOffset 处向下投射,扫到脚底以下。
+        // 起点必须足够高,使检测球不与地面"初始重叠"(PhysX 会跳过起点已重叠的碰撞体)。
+        [SerializeField] private float groundCheckRadius = 0.2f;
+        [SerializeField] private float groundCheckOffset = 0.5f;
+        [SerializeField] private float groundCheckDistance = 0.75f;
 
         // 摇杆死区阈值(移动输入)
         private const float MoveDeadzone = 0.15f;
-
-        private static readonly Collider[] GroundCheckBuffer = new Collider[8];
 
         public CharacterController CharacterController { get; private set; }
         public StateMachine StateMachine { get; } = new();
@@ -84,31 +81,26 @@ namespace Demo.Player
         }
 
         /// <summary>
-        /// 着地检测:用脚底重叠检测(OverlapSphere),而不是向下投射。
-        /// 向下 SphereCast 会跳过"起点已与地面重叠"的碰撞体——贴地站立时检测球
-        /// 必然与地面初始重叠,导致永远误判为空中(空中移动逻辑 = 滑行手感 + 播下落动画)。
-        /// 重叠检测直接询问"脚底附近是否有地面",并过滤角色自身的碰撞体。
+        /// 着地检测:从脚上方高处向下 SphereCast,只认法线朝上的表面。
+        /// 要点:
+        /// 1. 起点抬高到脚上 0.5,检测球不与地面初始重叠(PhysX 会跳过起点已重叠的碰撞体,
+        ///    这是第一版"永远误判空中"的原因)。
+        /// 2. 过滤 hit.normal.y &lt; 0.5 的表面——竖直墙面(如地面边缘的侧壁)不会被误认为地面。
+        ///    否则角色跑出地面边缘沿侧壁坠落时,球会间歇蹭到侧壁,着地状态每帧翻转,
+        ///    动画层跟着乱播落地动画。
+        /// 3. 起点处的球必然与自身 CC 初始重叠,PhysX 自动跳过自身,只命中下方地面。
         /// </summary>
         private void UpdateGrounded()
         {
-            var feetPoint = transform.position + Vector3.up * groundCheckOffset;
-            var count = Physics.OverlapSphereNonAlloc(feetPoint, groundCheckRadius, GroundCheckBuffer, ~0, QueryTriggerInteraction.Ignore);
+            var origin = transform.position + Vector3.up * groundCheckOffset;
+            var hitGround = Physics.SphereCast(origin, groundCheckRadius, Vector3.down, out var hit,
+                                groundCheckDistance, ~0, QueryTriggerInteraction.Ignore)
+                            && hit.normal.y > 0.5f;
 
-            var grounded = false;
-            for (var i = 0; i < count; i++)
-            {
-                // 忽略角色自身(IsChildOf 包含自身,CharacterController 也在过滤范围内)
-                if (GroundCheckBuffer[i].transform.IsChildOf(transform))
-                    continue;
+            if (hitGround != IsGrounded)
+                DemoLog.Log($"着地状态:{IsGrounded} -> {hitGround}");
 
-                grounded = true;
-                break;
-            }
-
-            if (grounded != IsGrounded)
-                DemoLog.Log($"着地状态:{IsGrounded} -> {grounded}");
-
-            IsGrounded = grounded;
+            IsGrounded = hitGround;
         }
 
         /// <summary>

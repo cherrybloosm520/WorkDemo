@@ -23,14 +23,13 @@ namespace Demo.Core
 
         private static void BuildDevRig()
         {
-            // 地面:用厚方块而不是薄平面。
-            // CharacterController 站在零厚度的 Plane 上时,会被向下的贴地力反复
-            // 推穿再弹回(着地检测两帧一抖,状态机与动画跟着乱跳——"跳一下全乱"的根因)。
-            // 厚实心方块给 CC 稳定支撑,顶面在 y=0。
+            // 地面:厚实心方块给 CC 稳定支撑,顶面在 y=0。
+            // 尺寸取 100×100:冲刺(6.2m/s)从中心到边缘约 8 秒,开发期不易跑出边界。
+            // 正式训练场场景会用真实地形替换。
             var ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
             ground.name = "Ground (Dev)";
             ground.transform.position = new Vector3(0f, -1f, 0f);
-            ground.transform.localScale = new Vector3(20f, 2f, 20f);
+            ground.transform.localScale = new Vector3(100f, 2f, 100f);
             ground.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.16f, 0.17f, 0.19f));
 
             // 玩家(预制体优先,胶囊回退)
