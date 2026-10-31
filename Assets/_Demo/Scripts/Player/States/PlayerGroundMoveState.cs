@@ -22,7 +22,7 @@ namespace Demo.Player
 
         public void Tick(float deltaTime)
         {
-            var moveInput = PlayerInput.Move.ReadValue<Vector2>();
+            var moveInput = _owner.ReadMoveInput();
             var hasInput = moveInput.sqrMagnitude > 0.001f;
 
             // 目标速度:有输入 → 朝向输入方向;无输入 → 0(靠减速度自然停下)
@@ -32,6 +32,10 @@ namespace Demo.Player
 
             var rate = hasInput ? _owner.Acceleration : _owner.Deceleration;
             _owner.HorizontalVelocity = Vector3.MoveTowards(_owner.HorizontalVelocity, targetVelocity, rate * deltaTime);
+
+            // 无输入且速度极小时直接归零,杜绝残留的微小滑动
+            if (!hasInput && _owner.HorizontalVelocity.sqrMagnitude < 0.01f)
+                _owner.HorizontalVelocity = Vector3.zero;
 
             // 朝向:移动时朝移动方向,静止时缓缓转向相机方向(为后续锁定/战斗朝向做准备)
             _owner.RotateTowards(hasInput ? moveDirection : _owner.CameraForward(), deltaTime);

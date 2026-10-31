@@ -1,4 +1,5 @@
 using Cinemachine;
+using Demo.Core;
 using UnityEngine;
 
 namespace Demo.Player
@@ -15,6 +16,9 @@ namespace Demo.Player
         [SerializeField] private float xSensitivity = 0.12f;    // 水平:度/像素
         [SerializeField] private float ySensitivity = 0.0018f;  // 垂直:FreeLook Y 轴(0~1)/像素
         [SerializeField] private float smoothTime = 0.06f;      // 输入平滑
+
+        // 摇杆死区阈值(视角输入)
+        private const float LookDeadzone = 0.1f;
 
         [Header("垂直视角范围(角度制,单位:度)")]
         [Tooltip("顶环俯视角度:正数 = 俯视,数值越大越接近垂直向下。不要接近 ±90°")]
@@ -81,7 +85,8 @@ namespace Demo.Player
             _freeLook.m_Orbits[1] = OrbitFromPitch(middlePitch, middleRadius);
             _freeLook.m_Orbits[2] = OrbitFromPitch(bottomPitch, bottomRadius);
 
-            var look = PlayerInput.Look.ReadValue<Vector2>();
+            // 死区过滤右摇杆漂移(鼠标 delta 单位为像素,数值远大于死区,不受影响)
+            var look = InputUtils.ApplyStickDeadzone(PlayerInput.Look.ReadValue<Vector2>(), LookDeadzone);
 
             // 平滑原始输入,让镜头有轻微重量感
             var target = new Vector2(look.x * xSensitivity, -look.y * ySensitivity);

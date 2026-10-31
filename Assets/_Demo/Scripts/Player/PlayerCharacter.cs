@@ -15,7 +15,8 @@ namespace Demo.Player
         [SerializeField] private float walkSpeed = 3f;
         [SerializeField] private float sprintSpeed = 6.2f;
         [SerializeField] private float acceleration = 40f;    // 有输入时的地面加速度
-        [SerializeField] private float deceleration = 50f;    // 无输入时的地面减速度
+        [SerializeField] private float deceleration = 60f;    // 无输入时的地面减速度
+        [SerializeField] private float airDeceleration = 5f;  // 空中无输入时的空气阻力
         [SerializeField] private float airControlFactor = 0.35f;
         [SerializeField] private float turnSpeed = 900f;      // 旋转角速度(度/秒)
 
@@ -24,6 +25,9 @@ namespace Demo.Player
         [SerializeField] private float gravity = -24f;
         [SerializeField] private float maxFallSpeed = -30f;
         [SerializeField] private float groundCheckRadius = 0.22f;
+
+        // 摇杆死区阈值(移动输入)
+        private const float MoveDeadzone = 0.15f;
 
         public CharacterController CharacterController { get; private set; }
         public StateMachine StateMachine { get; } = new();
@@ -43,6 +47,7 @@ namespace Demo.Player
         public float SprintSpeed => sprintSpeed;
         public float Acceleration => acceleration;
         public float Deceleration => deceleration;
+        public float AirDeceleration => airDeceleration;
         public float AirControlFactor => airControlFactor;
         public float TurnSpeed => turnSpeed;
         public float JumpSpeed => jumpSpeed;
@@ -80,6 +85,15 @@ namespace Demo.Player
             var halfHeight = CharacterController.height * 0.5f;
             var origin = transform.position + Vector3.up * 0.1f;
             IsGrounded = Physics.SphereCast(origin, groundCheckRadius, Vector3.down, out _, halfHeight - 0.1f + 0.05f);
+        }
+
+        /// <summary>
+        /// 读取移动输入并施加死区:过滤手柄摇杆漂移
+        /// (漂移会让角色自己动、松手后仍滑动;键盘输入幅值 ≥ 1,不受死区影响)。
+        /// </summary>
+        public Vector2 ReadMoveInput()
+        {
+            return InputUtils.ApplyStickDeadzone(PlayerInput.Move.ReadValue<Vector2>(), MoveDeadzone);
         }
 
         /// <summary>把需要"缓冲"的输入(当前仅跳跃)在按键瞬间压入缓冲队列,由状态按时机消费。</summary>

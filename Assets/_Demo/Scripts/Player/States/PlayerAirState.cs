@@ -23,7 +23,7 @@ namespace Demo.Player
 
         public void Tick(float deltaTime)
         {
-            var moveInput = PlayerInput.Move.ReadValue<Vector2>();
+            var moveInput = _owner.ReadMoveInput();
             var hasInput = moveInput.sqrMagnitude > 0.001f;
 
             // 空中控制:同样的方向逻辑,但加速度乘以空控系数
@@ -34,6 +34,13 @@ namespace Demo.Player
                 var targetVelocity = moveDirection * (sprinting ? _owner.SprintSpeed : _owner.WalkSpeed) * _owner.AirControlFactor;
                 _owner.HorizontalVelocity = Vector3.MoveTowards(
                     _owner.HorizontalVelocity, targetVelocity, _owner.Acceleration * _owner.AirControlFactor * deltaTime);
+            }
+            else
+            {
+                // 空中松开方向后仍有轻微空气阻力,
+                // 避免着地检测偶发抖动时水平速度永不衰减造成"无摩擦滑行"
+                _owner.HorizontalVelocity = Vector3.MoveTowards(
+                    _owner.HorizontalVelocity, Vector3.zero, _owner.AirDeceleration * deltaTime);
             }
 
             _owner.RotateTowards(hasInput ? _owner.InputDirection(moveInput) : _owner.CameraForward(), deltaTime);
