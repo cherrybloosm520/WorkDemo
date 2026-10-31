@@ -45,14 +45,14 @@ namespace Demo.Player
             {
                 DemoLog.Log("消费跳跃缓冲,起跳");
                 _owner.VerticalVelocity = _owner.JumpSpeed;
-                _owner.StateMachine.ChangeState<PlayerAirState>();
+                _owner.StateMachine.ChangeState<PlayerAirState>("跳跃:消费输入缓冲,垂直速度设为起跳速度");
                 return;
             }
 
             // 走出平台边缘 → 进入空中
             if (!_owner.IsGrounded)
             {
-                _owner.StateMachine.ChangeState<PlayerAirState>();
+                _owner.StateMachine.ChangeState<PlayerAirState>("离地:着地检测为假(失去支撑/失足)");
                 return;
             }
 

@@ -53,8 +53,10 @@ namespace Demo.Player
             // 落地(仅在垂直速度不再向上时判定,避免起跳瞬间被误判回地面)
             if (_owner.IsGrounded && _owner.VerticalVelocity <= 0f)
             {
+                var landingVV = _owner.VerticalVelocity;
                 _owner.VerticalVelocity = 0f;
-                _owner.StateMachine.ChangeState<PlayerGroundMoveState>();
+                _owner.StateMachine.ChangeState<PlayerGroundMoveState>(
+                    $"落地:着地检测为真,且 VV={landingVV:F2} <= 0(垂直速度归零)");
             }
         }
 

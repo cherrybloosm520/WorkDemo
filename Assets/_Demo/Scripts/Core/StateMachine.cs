@@ -32,8 +32,8 @@ namespace Demo.Core
             _states[typeof(TState)] = state;
         }
 
-        /// <summary>切换到目标状态;若已在目标状态则忽略。</summary>
-        public void ChangeState<TState>() where TState : IState
+        /// <summary>切换到目标状态;若已在目标状态则忽略。reason 说明转移原因,写入日志。</summary>
+        public void ChangeState<TState>(string reason = "") where TState : IState
         {
             var target = typeof(TState);
             var previous = _current?.GetType();
@@ -45,7 +45,8 @@ namespace Demo.Core
 
             _current?.Exit();
             _current = next;
-            DemoLog.Log($"状态机:{previous?.Name} -> {target.Name}");
+            DemoLog.Log($"状态机:{previous?.Name} -> {target.Name}" +
+                        (string.IsNullOrEmpty(reason) ? "" : $",原因:{reason}"));
             _current.Enter();
         }
 

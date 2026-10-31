@@ -72,7 +72,7 @@ namespace Demo.Player
 
         private void Start()
         {
-            StateMachine.ChangeState<PlayerGroundMoveState>();
+            StateMachine.ChangeState<PlayerGroundMoveState>("初始化,进入地面状态");
         }
 
         private void Update()
