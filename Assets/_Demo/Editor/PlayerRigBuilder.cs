@@ -114,6 +114,9 @@ namespace Demo.Editor
 
             AssetDatabase.SaveAssets();
             Debug.Log($"[PlayerRigBuilder] 动画控制器已生成:{ControllerPath}");
+            Debug.Log("[PlayerRigBuilder] 状态哈希对照(用于运行日志解码):" +
+                      string.Join(", ", new[] { idle, walk, run, jump, fall, land }
+                          .Select(s => $"{s.name}=0x{Animator.StringToHash(s.name):X8}")));
         }
 
         [MenuItem("Demo/角色搭建/3. 生成玩家预制体")]
@@ -201,7 +204,12 @@ namespace Demo.Editor
 
             foreach (var fbx in fbxPaths)
             {
-                var clip = AssetDatabase.LoadAllAssetsAtPath(fbx).OfType<AnimationClip>().FirstOrDefault();
+                // 跳过 "__preview__" 前缀的预览剪辑:它是编辑器预览窗生成的占位剪辑,
+                // 播放它不会驱动角色骨骼(之前"播错动作"的原因之一)
+                var clip = AssetDatabase.LoadAllAssetsAtPath(fbx)
+                    .OfType<AnimationClip>()
+                    .FirstOrDefault(c => !c.name.StartsWith("__preview__", System.StringComparison.Ordinal))
+                    ?? AssetDatabase.LoadAllAssetsAtPath(fbx).OfType<AnimationClip>().FirstOrDefault();
                 if (clip == null)
                     continue;
 

@@ -24,10 +24,13 @@ namespace Demo.Player
         [SerializeField] private float jumpSpeed = 7.5f;
         [SerializeField] private float gravity = -24f;
         [SerializeField] private float maxFallSpeed = -30f;
-        [SerializeField] private float groundCheckRadius = 0.22f;
+        [SerializeField] private float groundCheckRadius = 0.18f;
+        [SerializeField] private float groundCheckOffset = 0.1f;
 
         // 摇杆死区阈值(移动输入)
         private const float MoveDeadzone = 0.15f;
+
+        private static readonly Collider[] GroundCheckBuffer = new Collider[8];
 
         public CharacterController CharacterController { get; private set; }
         public StateMachine StateMachine { get; } = new();
@@ -77,14 +80,26 @@ namespace Demo.Player
         }
 
         /// <summary>
-        /// 着地检测:从胶囊中心向下投射小半径球,半径小于 CharacterController 半径,
-        /// 因此初始不会与自己重叠,只会命中地面。
+        /// 着地检测:用脚底重叠检测(OverlapSphere),而不是向下投射。
+        /// 向下 SphereCast 会跳过"起点已与地面重叠"的碰撞体——贴地站立时检测球
+        /// 必然与地面初始重叠,导致永远误判为空中(空中移动逻辑 = 滑行手感 + 播下落动画)。
+        /// 重叠检测直接询问"脚底附近是否有地面",并过滤角色自身的碰撞体。
         /// </summary>
         private void UpdateGrounded()
         {
-            var halfHeight = CharacterController.height * 0.5f;
-            var origin = transform.position + Vector3.up * 0.1f;
-            var grounded = Physics.SphereCast(origin, groundCheckRadius, Vector3.down, out _, halfHeight - 0.1f + 0.05f);
+            var feetPoint = transform.position + Vector3.up * groundCheckOffset;
+            var count = Physics.OverlapSphereNonAlloc(feetPoint, groundCheckRadius, GroundCheckBuffer, ~0, QueryTriggerInteraction.Ignore);
+
+            var grounded = false;
+            for (var i = 0; i < count; i++)
+            {
+                // 忽略角色自身(IsChildOf 包含自身,CharacterController 也在过滤范围内)
+                if (GroundCheckBuffer[i].transform.IsChildOf(transform))
+                    continue;
+
+                grounded = true;
+                break;
+            }
 
             if (grounded != IsGrounded)
                 DemoLog.Log($"着地状态:{IsGrounded} -> {grounded}");

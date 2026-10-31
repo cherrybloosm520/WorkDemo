@@ -16,6 +16,7 @@ namespace Demo.Player
         private PlayerCharacter _character;
         private bool _jumpConsumed;
         private string _lastClipName = string.Empty;
+        private int _lastStateHash;
 
         private static readonly int SpeedId = Animator.StringToHash("Speed");
         private static readonly int GroundedId = Animator.StringToHash("Grounded");
@@ -72,13 +73,21 @@ namespace Demo.Player
                 _jumpConsumed = false;
             }
 
+            // 动画状态变化时输出日志(哈希值与搭建时的"状态哈希对照"日志互查)
+            var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+            if (stateInfo.shortNameHash != _lastStateHash)
+            {
+                DemoLog.Log($"动画状态:0x{_lastStateHash:X8} -> 0x{stateInfo.shortNameHash:X8} " +
+                            $"(Speed={planarSpeed:F2}, Grounded={_character.IsGrounded}, VV={_character.VerticalVelocity:F2})");
+                _lastStateHash = stateInfo.shortNameHash;
+            }
+
             // 当前播放剪辑变化时输出日志(带关键参数,便于排查"播错动作")
             var clipInfo = _animator.GetCurrentAnimatorClipInfo(0);
             var clipName = clipInfo.Length > 0 ? clipInfo[0].clip.name : "(无剪辑)";
             if (clipName != _lastClipName)
             {
-                DemoLog.Log(
-                    $"动画剪辑:{_lastClipName} -> {clipName} (Speed={planarSpeed:F2}, Grounded={_character.IsGrounded}, VV={_character.VerticalVelocity:F2})");
+                DemoLog.Log($"动画剪辑:{_lastClipName} -> {clipName}");
                 _lastClipName = clipName;
             }
         }

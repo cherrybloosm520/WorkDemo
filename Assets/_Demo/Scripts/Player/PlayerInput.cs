@@ -58,7 +58,8 @@ namespace Demo.Player
 
         private static InputActionAsset Build()
         {
-            var asset = new InputActionAsset();
+            // Input System 不允许 new ScriptableObject 派生类,必须用 CreateInstance(否则 Console 报错)
+            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
             var map = asset.AddActionMap("Player");
 
             var move = map.AddAction("Move", InputActionType.Value, "<Gamepad>/leftStick");

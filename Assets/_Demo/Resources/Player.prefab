@@ -84,7 +84,8 @@ MonoBehaviour:
   jumpSpeed: 7.5
   gravity: -24
   maxFallSpeed: -30
-  groundCheckRadius: 0.22
+  groundCheckRadius: 0.18
+  groundCheckOffset: 0.1
 --- !u!114 &1397903522233703883
 MonoBehaviour:
   m_ObjectHideFlags: 0
